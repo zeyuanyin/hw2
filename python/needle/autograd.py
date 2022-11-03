@@ -42,12 +42,12 @@ class CPUDevice(Device):
         return numpy.ones(shape, dtype=dtype)
 
     def randn(self, *shape):
-        # note: numpy doesn't support types within standard random routines, and 
+        # note: numpy doesn't support types within standard random routines, and
         # .astype("float32") does work if we're generating a singleton
-        return numpy.random.randn(*shape) 
+        return numpy.random.randn(*shape)
 
     def rand(self, *shape):
-        # note: numpy doesn't support types within standard random routines, and 
+        # note: numpy doesn't support types within standard random routines, and
         # .astype("float32") does work if we're generating a singleton
         return numpy.random.rand(*shape)
 
@@ -365,7 +365,10 @@ class Tensor(Value):
 
     def __pow__(self, other):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        if isinstance(other, Tensor):
+            return needle.ops.EWisePow()(self, other)
+        else:
+            return needle.ops.PowerScalar(other)(self)
         ### END YOUR SOLUTION
 
     def __sub__(self, other):
@@ -423,7 +426,25 @@ def compute_gradient_of_variables(output_tensor, out_grad):
     reverse_topo_order = list(reversed(find_topo_sort([output_tensor])))
 
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    for node in reverse_topo_order:
+
+        output_grad = Tensor(numpy.zeros(node.shape))
+        for each_output_grad in node_to_output_grads_list[node]:
+            output_grad += each_output_grad
+
+        node.grad = output_grad
+
+        if node.op is None:
+            continue
+
+        input_grad = node.op.gradient_as_tuple(node.grad, node)
+
+        for input_node, grad in zip(node.inputs, input_grad):
+
+            if input_node not in node_to_output_grads_list:
+                node_to_output_grads_list[input_node] = []
+            node_to_output_grads_list[input_node].append(grad)
+
     ### END YOUR SOLUTION
 
 
@@ -436,14 +457,27 @@ def find_topo_sort(node_list: List[Value]) -> List[Value]:
     sort.
     """
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    topo_order = []
+    visited = set()
+
+    topo_sort_dfs(node_list[0], visited, topo_order)
+
+    return topo_order
     ### END YOUR SOLUTION
 
 
 def topo_sort_dfs(node, visited, topo_order):
     """Post-order DFS"""
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    if node in visited:
+        return
+
+    visited.add(node)
+
+    for input_node in node.inputs:
+        topo_sort_dfs(input_node, visited, topo_order)
+
+    topo_order.append(node)
     ### END YOUR SOLUTION
 
 
