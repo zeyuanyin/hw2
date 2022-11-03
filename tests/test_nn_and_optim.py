@@ -1,5 +1,7 @@
 import sys
 sys.path.append("./python")
+sys.path.append("/home/zeyuan.yin/sys/hw2/python")
+sys.path.append("/home/zeyuan.yin/sys/hw2/apps")
 import numpy as np
 import needle as ndl
 import needle.nn as nn
@@ -952,7 +954,7 @@ def submit_nn_flatten():
     mugrade.submit(flatten_backward(2,2,2))
     mugrade.submit(flatten_backward(2,3,4,2,1,2))
     mugrade.submit(flatten_backward(2,3,4,4))
-    
+
 
 
 def test_optim_sgd_vanilla_1():
@@ -1106,3 +1108,8 @@ def submit_mlp_resnet():
     mugrade.submit(train_epoch_1(7, 256, ndl.optim.Adam, lr=0.01, weight_decay=0.01))
     mugrade.submit(eval_epoch_1(12, 154))
     mugrade.submit(train_mnist_1(550, 1, ndl.optim.SGD, 0.01, 0.01, 7))
+
+
+
+if __name__ == "__main__":
+    test_mlp_eval_epoch_1()

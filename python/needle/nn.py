@@ -88,12 +88,12 @@ class Linear(Module):
         self.out_features = out_features
 
         ### BEGIN YOUR SOLUTION
-        self.weight = init.kaiming_uniform(
+        self.weight = Parameter(init.kaiming_uniform(
             in_features, out_features, nonlinearity="relu"
-        )
-        self.bias = init.kaiming_uniform(out_features, 1, nonlinearity="relu").reshape(
+        ))
+        self.bias = Parameter(init.kaiming_uniform(out_features, 1, nonlinearity="relu").reshape(
             (1, -1)
-        )
+        ))
         ### END YOUR SOLUTION
 
     def forward(self, X: Tensor) -> Tensor:
@@ -127,6 +127,8 @@ class Sequential(Module):
         ### BEGIN YOUR SOLUTION
         for i in self.modules:
             x = i.forward(x)
+            if x is None:
+                raise ValueError("None value is not allowed")
         return x
         ### END YOUR SOLUTION
 
@@ -135,13 +137,18 @@ class SoftmaxLoss(Module):
     def forward(self, logits: Tensor, y: Tensor):
         ### BEGIN YOUR SOLUTION
         # print('logits shape:',logits.shape)
-        # print('y shape:',y.shape)
+
         softmax = ops.logsumexp(logits, axes=(1,))
+        # .reshape((logits.shape[0], 1)).broadcast_to(logits.shape)
         # print('softmax shape:',softmax.shape)
-        y_label = logits * init.one_hot(logits.shape[1], y)
+        # print('y onehot shape:',init.one_hot(logits.shape[1],y).shape)
+        y_label = logits * init.one_hot(logits.shape[1], y).sum(axes=(1,))
         y_label = y_label.sum(axes=(1,))
         # print('y_label shape:',y_label.shape)
-        return (softmax - y_label).sum() / logits.shape[0]
+        res=(softmax - y_label).sum() / logits.shape[0]
+        # print('res type',res.data.dtype)
+        return res
+
         ### END YOUR SOLUTION
 
 
@@ -200,21 +207,16 @@ class LayerNorm1d(Module):
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
 
-        print("x shape:", x.shape)
-        print("weight shape:", self.weight.shape)
-        print("bias shape:", self.bias.shape)
-        print("dim:", self.dim)
-        print("-----")
+        # print("x shape:", x.shape)
+        # print("weight shape:", self.weight.shape)
+        # print("bias shape:", self.bias.shape)
+        # print("dim:", self.dim)
+        # print("-----")
         # x.shape = (batch_size, dim)
         Expection = x.sum(axes=1) / x.shape[1]
-        print("Expection shape:", Expection.shape)
         Expection = Expection.reshape((x.shape[0], 1)).broadcast_to(x.shape)
-        print("Expection shape:", Expection.shape)
-
 
         Variance = (ops.power_scalar((x - Expection) ,2)).sum(axes=1) / x.shape[1]
-        print("Variance shape:", Variance.shape)
-
         Variance = Variance.reshape((x.shape[0], 1)).broadcast_to(x.shape)
 
         x_norm = (x - Expection) / ops.power_scalar((Variance + self.eps) , 0.5)
@@ -231,7 +233,13 @@ class Dropout(Module):
 
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+
+        # Bernoulli distribution
+        if self.training:
+            mask = init.randb(*x.shape,p=1-self.p)
+            return x * mask/(1-self.p)
+        else:
+            return x
         ### END YOUR SOLUTION
 
 
@@ -242,5 +250,5 @@ class Residual(Module):
 
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return x + self.fn.forward(x)
         ### END YOUR SOLUTION
