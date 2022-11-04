@@ -1,7 +1,7 @@
 import sys
 sys.path.append("./python")
-sys.path.append("/home/zeyuan.yin/sys/hw2/python")
-sys.path.append("/home/zeyuan.yin/sys/hw2/apps")
+# sys.path.append("/home/zeyuan.yin/sys/hw2/python")
+# sys.path.append("/home/zeyuan.yin/sys/hw2/apps")
 import numpy as np
 import needle as ndl
 import needle.nn as nn

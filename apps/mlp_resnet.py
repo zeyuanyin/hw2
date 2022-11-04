@@ -48,7 +48,6 @@ class MLPResNet_(nn.Module):
         super().__init__()
         self.model = nn.Sequential(
             nn.Linear(dim, hidden_dim),
-            # norm(hidden_dim),
             nn.ReLU(),
             *[
                 ResidualBlock(hidden_dim, hidden_dim // 2, norm, drop_prob)
@@ -79,7 +78,6 @@ def epoch(dataloader, model, opt=None):
     np.random.seed(4)
     ### BEGIN YOUR SOLUTION
 
-    Loss = nn.SoftmaxLoss()
     if opt is None:
         model.eval()
     else:
@@ -99,9 +97,12 @@ def epoch(dataloader, model, opt=None):
             opt.reset_grad()
 
         y_pred = model(x)
-        loss = Loss(y_pred, y)
+        loss = nn.SoftmaxLoss()(y_pred, y)
 
-        total_error += (np.argmax(y_pred.numpy(), axis=1) != y.numpy()).sum()
+        # y_hat = y_pred.numpy().argmax(axis=1)
+        # print(y_hat!=y.reshape(-1).numpy())
+        # print()
+        total_error += (y_pred.numpy().argmax(axis=1) != y.reshape(-1).numpy()).sum()
         total_loss += loss.numpy()
 
         if opt is not None:
